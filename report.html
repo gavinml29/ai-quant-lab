@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #333; line-height: 1.8; }
+  h1 { font-size: 28px; border-bottom: 3px solid #4a6cf7; padding-bottom: 10px; }
+  h2 { font-size: 22px; color: #4a6cf7; margin-top: 40px; border-left: 4px solid #4a6cf7; padding-left: 12px; }
+  h3 { font-size: 18px; color: #555; margin-top: 30px; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  th { background: #4a6cf7; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 8px 12px; border-bottom: 1px solid #eee; }
+  tr:nth-child(even) { background: #f8f9fa; }
+  .formula { background: #f5f5f5; padding: 12px 16px; border-radius: 6px; font-family: monospace; font-size: 13px; margin: 10px 0; }
+  .signal { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 700; }
+  .buy { background: #ffeaea; color: #e74c3c; }
+  .sell { background: #eafaea; color: #27ae60; }
+  .neutral { background: #f0f0f0; color: #666; }
+  code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+  .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #999; }
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<h1>Stock Indicator Lab — 技术指标分析报告</h1>
+
+<p><b>版本：</b>v7 | <b>日期：</b>2026-07-04 | <b>数据：</b>7 只 A 股，3 年日线 (2023-07 ~ 2026-07)</p>
+<p><b>股票池：</b>三安光电、金风科技、铂力特、信维通信、绿的谐波、兆易创新、北京君正</p>
+
+<h2>1. 工具概述</h2>
+<p><code>index.html</code> 是一个纯静态 Web 应用（双击即可打开），基于 <b>ECharts 5.5</b> 渲染，内嵌 7 只 A 股的 3 年 OHLCV 数据。提供以下交互功能：</p>
+<ul>
+  <li><b>股票切换：</b>左侧下拉选择器，切换后全部图表实时重绘</li>
+  <li><b>K 线图：</b>原生 candlestick + MA5/10/20/60 + 成交量柱状图，含 dataZoom 缩放/平移</li>
+  <li><b>RSI 面板：</b>参数 N 可调 (2~100)，含 30/70 参考线</li>
+  <li><b>MACD 面板：</b>FAST/SLOW/SIGNAL 三参数可调，含金叉/死叉统计</li>
+  <li><b>BOLL 面板：</b>N 和 K 可调 (K 支持 0.1 精度)，含突破/跌破计数</li>
+  <li><b>ATR 面板：</b>参数 N 可调，含波动率百分比显示</li>
+  <li><b>Reset 按钮：</b>一键恢复所有默认参数</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>2. RSI — 相对强弱指标</h2>
+<h3>计算公式</h3>
+<div class="formula">RSI = 100 &minus; 100 / (1 + RS)<br>RS = avg_gain / avg_loss<br>Wilder 平滑: avg_t = (avg_{t-1} * (N-1) + value_t) / N</div>
+
+<h3>参数 N 的影响分析</h3>
+<table>
+<tr><th>N 值</th><th>灵敏度</th><th>波动范围</th><th>适用场景</th></tr>
+<tr><td><b>5~7 (超短)</b></td><td>极高，频繁触及 30/70</td><td>20~80</td><td>超短线交易 (1~3 日)，日内波动捕捉</td></tr>
+<tr><td><b>14 (默认)</b></td><td>适中，< 5次/年触极值</td><td>30~70</td><td>中短线波段交易，经典 Welles Wilder 推荐</td></tr>
+<tr><td><b>21~28 (中期)</b></td><td>较低，曲线平滑</td><td>35~65</td><td>中期趋势确认，过滤短线噪音</td></tr>
+<tr><td><b>50+ (长线)</b></td><td>极低，接近水平线</td><td>40~60</td><td>长线持仓参考，不适合波段操作</td></tr>
+</table>
+
+<h3>交易信号指导</h3>
+<ul>
+  <li><span class="signal buy">买入</span> RSI &lt; 30 且开始回升（超卖反弹）：配合 N=14 使用，确认信号需等 RSI 上穿 30 线</li>
+  <li><span class="signal sell">卖出</span> RSI &gt; 70 且开始回落（超买回调）：不建议仅凭 RSI 做空，应结合趋势判断</li>
+  <li><span class="signal neutral">背离</span> 价格新高但 RSI 未创新高（顶背离）→ 趋势衰竭，减仓信号</li>
+  <li><b>N 值调小：</b>信号更频繁但假信号增多，适合高波动品种（如 688333 铂力特）</li>
+  <li><b>N 值调大：</b>信号更可靠但滞后，适合低波动蓝筹（如 600900 长江电力）</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>3. MACD — 指数平滑异同移动平均线</h2>
+<h3>计算公式</h3>
+<div class="formula">EMA(N)_t = close_t * 2/(N+1) + EMA(N)_{t-1} * (1 &minus; 2/(N+1))<br>DIFF = EMA(FAST) &minus; EMA(SLOW)<br>DEA = EMA(SIGNAL) of DIFF<br>MACD 柱 = 2 * (DIFF &minus; DEA)</div>
+
+<h3>参数组合影响分析</h3>
+<table>
+<tr><th>参数组合</th><th>金叉频率</th><th>滞后性</th><th>适用场景</th></tr>
+<tr><td><b>(12,26,9) 默认</b></td><td>约 15~20 次/3年</td><td>2~3 根 K 线</td><td>标准中短线，适合大多数股票</td></tr>
+<tr><td><b>(6,13,4) 灵敏型</b></td><td>约 40~60 次/3年</td><td>1 根 K 线</td><td>超短线或高波动品种，假信号多</td></tr>
+<tr><td><b>(24,52,18) 稳健型</b></td><td>约 5~10 次/3年</td><td>5~8 根 K 线</td><td>中长线趋势跟踪，适合蓝筹</td></tr>
+<tr><td><b>(5,34,5) 异类</b></td><td>FAST << SLOW</td><td>严重滞后</td><td>长线投资参考，忽略短期波动</td></tr>
+</table>
+
+<h3>交易信号指导</h3>
+<ul>
+  <li><span class="signal buy">金叉 (Golden Cross)</span> DIFF 上穿 DEA → 买入信号。默认参数下金叉出现在趋势启动初期，但需结合零轴位置：零轴上方金叉强于零轴下方</li>
+  <li><span class="signal sell">死叉 (Dead Cross)</span> DIFF 下穿 DEA → 卖出信号。零轴上方死叉可视为回调，零轴下方死叉是趋势转弱确认</li>
+  <li><span class="signal neutral">零轴判断</span> DIFF &gt; 0 为多头市场，DIFF &lt; 0 为空头市场。MACD 柱由绿转红是短线转强信号</li>
+  <li><b>SIGNAL 参数：</b>调大 SIGNAL (如 18) 使 DEA 更平滑，减少假信号但滞后增加；调小 SIGNAL (如 5) 信号更及时但噪音多</li>
+  <li><b>FAST/SLOW 差距：</b>差距越大（如 FAST=5, SLOW=50），DIFF 振幅越大，适合趋势分明的品种；差距越小，DIFF 接近零轴，信号微弱</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>4. BOLL — 布林带</h2>
+<h3>计算公式</h3>
+<div class="formula">MIDDLE = MA(close, N)<br>STD = &sigma;(close, N)<br>UPPER = MIDDLE + K * STD<br>LOWER = MIDDLE - K * STD</div>
+
+<h3>参数影响分析</h3>
+<table>
+<tr><th>参数</th><th>效果</th><th>交易含义</th></tr>
+<tr><td><b>N=10, K=2</b></td><td>带宽窄，突破频繁</td><td>适合短线波段，假突破多</td></tr>
+<tr><td><b>N=20, K=2 (默认)</b></td><td>带宽适中，突破偶发</td><td>标准配置，突破信号较可靠</td></tr>
+<tr><td><b>N=50, K=2</b></td><td>带宽宽，极少突破</td><td>中长线趋势通道，突破意义重大</td></tr>
+<tr><td><b>N=20, K=1.5</b></td><td>带窄 25%，突破增加</td><td>适合震荡市，高抛低吸</td></tr>
+<tr><td><b>N=20, K=3</b></td><td>带宽 50%，极少突破</td><td>适合趋势市，突破是强信号</td></tr>
+</table>
+
+<h3>交易信号指导</h3>
+<ul>
+  <li><span class="signal buy">突破上轨</span> 收盘价 &gt; UPPER → 强势突破信号。但在震荡市中可能是假突破，需配合成交量放大确认</li>
+  <li><span class="signal sell">跌破下轨</span> 收盘价 &lt; LOWER → 弱势信号。若连续多日在下轨运行，表明趋势转弱，应减仓</li>
+  <li><b>布林带宽度 (UPPER &minus; LOWER)：</b>宽度收缩到极小值时，预示即将变盘（突破上轨或下轨）</li>
+  <li><b>中轨方向：</b>中轨向上且价格在中轨上方 → 多头趋势；中轨向下且价格在中轨下方 → 空头趋势</li>
+  <li><b>K 值调节策略：</b>高波动股票（如科创板 688 开头）可适当扩大 K 值至 2.5~3，减少误报；低波动股票可缩小至 1.5~2，提高灵敏度</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>5. ATR — 平均真实波幅</h2>
+<h3>计算公式</h3>
+<div class="formula">TR = max(High &minus; Low, |High &minus; Close_{t-1}|, |Low &minus; Close_{t-1}|)<br>ATR = Wilder 平滑(TR, N)<br>波动率% = ATR / Close * 100</div>
+
+<h3>参数 N 的影响分析</h3>
+<table>
+<tr><th>N 值</th><th>ATR 特征</th><th>用途</th></tr>
+<tr><td><b>5~7 (超短)</b></td><td>反应极快，波动剧烈</td><td>日内止损设置、短线仓位管理</td></tr>
+<tr><td><b>14 (默认)</b></td><td>平滑适中，反映近期平均波幅</td><td>标准止损距离、波动率监控</td></tr>
+<tr><td><b>21~28 (中期)</b></td><td>非常平滑，忽略短期冲击</td><td>中长线仓位管理、趋势判断</td></tr>
+<tr><td><b>50+ (长线)</b></td><td>极慢，反映长期波动水平</td><td>长期风控参考、资产配置</td></tr>
+</table>
+
+<h3>交易信号指导</h3>
+<ul>
+  <li><span class="signal neutral">ATR 本身不产生买卖信号</span>，是波动率度量工具，用于辅助仓位管理和止损设置</li>
+  <li><b>止损距离：</b>建议止损设在入场价 &plusmn; 1.5~2 倍 ATR。A 股日线 ATR 通常在 0.5~3 元之间，应根据个股实际 ATR 值动态调整</li>
+  <li><b>仓位管理：</b>ATR 增大时应减仓（风险增加），ATR 缩小时可适当加仓（风险降低）</li>
+  <li><b>波动率突破：</b>ATR 突然飙升（&gt;2倍均值）往往伴随重大消息或趋势转变，应警惕</li>
+  <li><b>横盘识别：</b>ATR 持续走低 → 横盘整理阶段，不宜重仓参与</li>
+  <li><b>趋势确认：</b>上升趋势中 ATR 温和放大是健康信号；下跌趋势中 ATR 放大需警惕加速下跌</li>
+  <li><b>跨股票比较：</b>使用 ATR/Close% 而非绝对 ATR，才能公平对比不同价位股票的波动性</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>6. 多指标共振策略</h2>
+<table>
+<tr><th>组合信号</th><th>强度</th><th>操作建议</th></tr>
+<tr>
+  <td>RSI &gt; 50 + DIFF &gt; DEA + 价格在 BOLL 中轨上方 + ATR 正常</td>
+  <td><span class="signal buy">强多头</span></td>
+  <td>4 指标一致偏多，可积极持仓或加仓</td>
+</tr>
+<tr>
+  <td>RSI &lt; 30 + DIFF &lt; DEA + 价格跌破 BOLL 下轨 + ATR 放大</td>
+  <td><span class="signal sell">强空头</span></td>
+  <td>4 指标一致偏空，应减仓/止损</td>
+</tr>
+<tr>
+  <td>2 多 2 空</td>
+  <td><span class="signal neutral">分歧</span></td>
+  <td>市场方向不明，建议观望或轻仓</td>
+</tr>
+<tr>
+  <td>RSI 顶背离 + MACD 死叉 + 突破 BOLL 上轨后回落</td>
+  <td><span class="signal sell">顶部确认</span></td>
+  <td>高概率见顶，建议大幅减仓</td>
+</tr>
+<tr>
+  <td>RSI 底背离 + MACD 金叉 + 跌破 BOLL 下轨后回升</td>
+  <td><span class="signal buy">底部确认</span></td>
+  <td>高概率见底，可逐步建仓</td>
+</tr>
+</table>
+
+<h2>7. 工具使用说明</h2>
+<ol>
+  <li>双击 <code>index.html</code> 在浏览器中打开</li>
+  <li>选择股票：K 线图左侧下拉框选择目标股票</li>
+  <li>调节参数：每个指标面板左侧滑块拖动可实时看到曲线变化</li>
+  <li>对比分析：所有图表同宽，可将 K 线图与指标图上下对齐对比</li>
+  <li>重置：每个面板有独立 Reset 按钮，顶部有 Reset All</li>
+  <li>数据更新：修改 <code>data/</code> 目录下 CSV 后，运行 <code>python3 build.py</code> 重建 index.html</li>
+</ol>
+
+<h2>8. 参数建议速查表</h2>
+<table>
+<tr><th>交易风格</th><th>RSI</th><th>MACD</th><th>BOLL</th><th>ATR</th></tr>
+<tr><td>超短线 (日内~3日)</td><td>N=5~7</td><td>(6,13,4)</td><td>(10,2)</td><td>N=5</td></tr>
+<tr><td>短线波段 (1~2周)</td><td>N=14</td><td>(12,26,9)</td><td>(20,2)</td><td>N=14</td></tr>
+<tr><td>中线趋势 (1~3月)</td><td>N=21</td><td>(24,52,18)</td><td>(20,2.5)</td><td>N=21</td></tr>
+<tr><td>长线投资 (&gt;3月)</td><td>N=28~50</td><td>(12,26,9)*</td><td>(50,2)</td><td>N=50</td></tr>
+</table>
+<p style="font-size:12px;color:#999">* 长线投资仍推荐默认 MACD 参数，因 MACD 主要通过金叉/死叉和零轴判断趋势，参数过于钝化会严重滞后。</p>
+
+<div class="footer">
+<p>Generated by Stock Indicator Lab v7 &mdash; 2026-07-04</p>
+<p>免责声明：本报告及工具仅供学习研究使用，不构成任何投资建议。股市有风险，投资需谨慎。</p>
+</div>
+
+</body>
+</html>
