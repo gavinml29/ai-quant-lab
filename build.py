@@ -87,7 +87,10 @@ for code, name in stocks:
     H.append('<option value="'+code+'"' + (' selected' if code==default_code else '') + '>'+name+' '+code+'</option>')
 H.append('</select>')
 H.append('<div style="margin:10px 0"><span style="font-size:24px;font-weight:700" id="stkPrice">'+str(last_price)+'</span> <span class="'+('up' if change_pct>=0 else 'down')+'" id="stkChg" style="font-size:14px;font-weight:600;'+('color:#e74c3c' if change_pct>=0 else 'color:#27ae60')+'">'+('+' if change_pct>=0 else '')+str(round(change_pct,2))+'%</span></div>')
-H.append('<div style="font-size:11px;color:var(--text3)">开关幅 CNY<br>'+date_first+' ~<br>'+date_last+'</div>')
+H.append('<div style="margin:10px 0"><span style="font-weight:700;font-size:16px">日期范围</span></div>')
+H.append('<div style="margin-bottom:4px"><input type="date" id="dateStart" value="'+date_first+'" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:11px" onchange="applyDateFilter()"></div>')
+H.append('<div style="margin-bottom:8px"><input type="date" id="dateEnd" value="'+date_last+'" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:11px" onchange="applyDateFilter()"></div>')
+H.append('<button class="btn btn-reset btn-sm" onclick="applyDateFilter()" style="width:100%">更新日期</button>')
 H.append('</div>')
 H.append('</div>')
 H.append('<div class="panel-right"><div style="width:100%;height:480px" id="kline"></div></div>')
@@ -124,7 +127,7 @@ for pid, pname, params in panels:
 H.append('</div></div>')
 
 # Data
-H.append('<script>var ALL_DATA='+data_json+'; var RAW_DATA=ALL_DATA["'+default_code+'"]; var STOCKS='+stocks_json+'; var CUR_CODE="'+default_code+'";</script>')
+H.append('<script>var ALL_DATA='+data_json+'; var RAW_DATA=ALL_DATA["'+default_code+'"]; var FULL_DATA=RAW_DATA; var STOCKS='+stocks_json+'; var CUR_CODE="'+default_code+'";</script>')
 
 # JS
 js = """
@@ -146,11 +149,30 @@ function ema(series,N){var a=2/(N+1),r=[];r[0]=series[0];for(var i=1;i<series.le
 function sma(series,N){var r=[];for(var i=0;i<N-1;i++)r[i]=0;for(var i=N-1;i<series.length;i++){var s=0;for(var j=i-N+1;j<=i;j++)s+=series[j];r[i]=s/N;}return r;}
 function onSlider(sid,labelId,fn){var v=document.getElementById(sid).value;document.getElementById(labelId).textContent=v;if(fn)fn();}
 
+function applyDateFilter(){
+  var ds=document.getElementById("dateStart").value;
+  var de=document.getElementById("dateEnd").value;
+  if(!ds||!de) return;
+  RAW_DATA=FULL_DATA.filter(function(r){return r[0]>=ds && r[0]<=de;});
+  if(RAW_DATA.length===0){alert("No data in range");RAW_DATA=FULL_DATA;return;}
+  D=RAW_DATA.map(function(r){return r[0];});
+  C=RAW_DATA.map(function(r){return r[4];});
+  H=RAW_DATA.map(function(r){return r[2];});
+  L=RAW_DATA.map(function(r){return r[3];});
+  var last=RAW_DATA[RAW_DATA.length-1];
+  document.getElementById("stkPrice").textContent=last[4].toFixed(2);
+  document.getElementById("dataBar").textContent=CUR_CODE+" | "+RAW_DATA.length+" rows | "+D[0]+" ~ "+D[D.length-1]+" | Close "+last[4].toFixed(2);
+  redrawKLine();redrawRSI();redrawMACD();redrawBOLL();redrawATR();
+}
+
 function onStockChange(){
   var code=document.getElementById("stockSelect").value;
   if(code===CUR_CODE) return;
   CUR_CODE=code;
   RAW_DATA=ALL_DATA[code]||ALL_DATA["600703.SH"];
+  FULL_DATA=RAW_DATA;
+  document.getElementById("dateStart").value=D[0];
+  document.getElementById("dateEnd").value=D[D.length-1];
   D=RAW_DATA.map(function(r){return r[0];});
   C=RAW_DATA.map(function(r){return r[4];});
   H=RAW_DATA.map(function(r){return r[2];});
