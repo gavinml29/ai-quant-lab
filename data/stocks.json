@@ -1,0 +1,12 @@
+[
+  {"code":"600703","ts_code":"600703.SH","name":"三安光电","market":"sh","industry":"半导体"},
+  {"code":"600519","ts_code":"600519.SH","name":"贵州茅台","market":"sh","industry":"白酒"},
+  {"code":"000858","ts_code":"000858.SZ","name":"五粮液","market":"sz","industry":"白酒"},
+  {"code":"300750","ts_code":"300750.SZ","name":"宁德时代","market":"sz","industry":"电池"},
+  {"code":"002594","ts_code":"002594.SZ","name":"比亚迪","market":"sz","industry":"汽车"},
+  {"code":"601318","ts_code":"601318.SH","name":"中国平安","market":"sh","industry":"保险"},
+  {"code":"000333","ts_code":"000333.SZ","name":"美的集团","market":"sz","industry":"家电"},
+  {"code":"600036","ts_code":"600036.SH","name":"招商银行","market":"sh","industry":"银行"},
+  {"code":"002415","ts_code":"002415.SZ","name":"海康威视","market":"sz","industry":"安防"},
+  {"code":"601012","ts_code":"601012.SH","name":"隆基绿能","market":"sh","industry":"光伏"}
+]
